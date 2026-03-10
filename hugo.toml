@@ -9,7 +9,7 @@
 baseURL = "https://nukedev8.github.io/nukedev/"
 
 # Site title shown in browser tab + header
-title = "Hey, I'm Brian 👋"
+title = "nukedev"
 
 languageCode = "en-us"
 
@@ -141,7 +141,7 @@ buildExpired     = false
     enabled  = true
 
     # Main heading on the home page
-    title    = "Hey, I'm Brian 👋"
+    title    = "I'm Brian"
 
     # Sub-heading / tagline
     subtitle = "Full Stack Software Engineer"
@@ -150,7 +150,7 @@ buildExpired     = false
     imageUrl   = "/avatar.jpg"
     imageWidth  = 120
     imageHeight = 120
-    imageTitle  = "Brian"
+    imageTitle  = ""
 
     # Buttons shown below your bio — link to important pages
     [[params.profileMode.buttons]]
@@ -166,7 +166,7 @@ buildExpired     = false
 
   [[params.socialIcons]]
     name = "github"
-    url  = "https://github.com/yourhandle"
+    url  = "https://github.com/nukedev8"
 
   [[params.socialIcons]]
     name = "linkedin"
@@ -195,7 +195,7 @@ buildExpired     = false
 
   # --- SEO / OpenGraph ---
   [params.label]
-    text = "Brian"      # text shown in top-left corner (next to home icon)
+    text = "nukedev"
 
 # ---------------------------------------------------------------------------
 # Search page

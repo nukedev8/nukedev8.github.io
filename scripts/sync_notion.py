@@ -98,6 +98,24 @@ def fetch_published_posts(notion: Client) -> list:
         start_cursor = response.get("next_cursor")
 
     print(f"Found {len(results)} published post(s).")
+
+    # --- DEBUG: show actual property names when nothing is found ---
+    # Check the CI logs for this output if posts aren't syncing
+    if not results:
+        print("\n🔍 DEBUG: 0 posts found. Inspecting your database properties...")
+        try:
+            debug_resp = notion.databases.query(database_id=NOTION_DATABASE_ID, page_size=1)
+            pages = debug_resp.get("results", [])
+            if pages:
+                print("  Properties in your database:")
+                for name, val in pages[0].get("properties", {}).items():
+                    print(f"    '{name}' (type: {val.get('type')})")
+                print("\n  Script expects: 'Title', 'Slug', 'Published' (checkbox ✅), 'Date', 'Description', 'Tags'")
+            else:
+                print("  Database is empty — add a page and tick 'Published'.")
+        except Exception as e:
+            print(f"  DEBUG fetch failed: {e}")
+
     return results
 
 

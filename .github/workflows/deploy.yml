@@ -53,10 +53,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # Fetch the full git history so Hugo's .GitInfo works correctly
           fetch-depth: 0
-          # Fetch submodules (needed if your theme is a git submodule)
-          submodules: recursive
 
       # Step 2: Set up Python so we can run our sync script
       - name: Set up Python

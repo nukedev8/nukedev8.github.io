@@ -24,7 +24,8 @@ theme = "PaperMod"
 # ---------------------------------------------------------------------------
 
 # How many posts appear on the home feed / paginated pages
-paginate = 10
+[pagination]
+  pagerSize = 10
 
 # PaperMod needs these enabled for search to work
 enableRobotsTXT = true

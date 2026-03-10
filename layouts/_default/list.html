@@ -39,26 +39,13 @@
 {{- if and $allTags (not .IsHome) }}
 <div class="tag-filter">
   <label for="tag-select">Filter by tag:</label>
-  <select id="tag-select" onchange="if(this.value) window.location.href=this.value; else window.location.href='{{ .Permalink }}'">
-    <option value="">All</option>
+  <select id="tag-select">
+    <option value="all">All</option>
     {{- range $allTags }}
-    <option value="{{ "/tags/" | absLangURL }}{{ . | urlize }}/">{{ . }}</option>
+    <option value="{{ . | urlize }}">{{ . }}</option>
     {{- end }}
   </select>
 </div>
-<script>
-  (function() {
-    var sel = document.getElementById('tag-select');
-    var current = window.location.pathname;
-    for (var i = 0; i < sel.options.length; i++) {
-      var opt = sel.options[i];
-      if (opt.value && new URL(opt.value).pathname === current) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-  })();
-</script>
 {{- end }}
 
 {{- $paginator := .Paginate $pages }}
@@ -76,7 +63,7 @@
 {{- else if $term }}
 {{- $class = "post-entry tag-entry" }}
 {{- end }}
-<article class="{{ $class }}">
+<article class="{{ $class }}" data-tags="{{ delimit $page.Params.tags "," }}">
   {{- $isHidden := (.Param "cover.hiddenInList") | default (.Param "cover.hidden") | default false }}
   {{- partial "cover.html" (dict "cxt" . "IsSingle" false "isHidden" $isHidden) }}
   <header class="entry-header">
@@ -108,6 +95,23 @@
   </nav>
 </footer>
 {{- end }}
+
+<script>
+  var sel = document.getElementById('tag-select');
+  if (sel) {
+    sel.addEventListener('change', function () {
+      var tag = this.value;
+      document.querySelectorAll('article[data-tags]').forEach(function (el) {
+        if (tag === 'all') {
+          el.style.display = '';
+        } else {
+          var tags = el.dataset.tags ? el.dataset.tags.split(',').map(function(t){ return t.trim().toLowerCase().replace(/\s+/g,'-'); }) : [];
+          el.style.display = tags.indexOf(tag) !== -1 ? '' : 'none';
+        }
+      });
+    });
+  }
+</script>
 
 {{- end }}
 {{- end }}

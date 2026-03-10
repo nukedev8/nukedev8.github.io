@@ -42,14 +42,9 @@ buildExpired = false
   weight = 20
 
 [[menus.main]]
-  name = "Tags"
-  url = "/tags/"
-  weight = 30
-
-[[menus.main]]
   name = "Search"
   url = "/search/"
-  weight = 40
+  weight = 30
 
 [params]
   env = "production"

@@ -81,7 +81,7 @@ jobs:
       - name: Install Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: "0.124.1"   # Pin a known-good version
+          hugo-version: "0.146.0"   # Minimum version required by PaperMod
           extended: true             # Extended version needed by some themes
 
       # Step 6: Configure GitHub Pages

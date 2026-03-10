@@ -46,6 +46,19 @@
     {{- end }}
   </select>
 </div>
+<script>
+  (function() {
+    var sel = document.getElementById('tag-select');
+    var current = window.location.pathname;
+    for (var i = 0; i < sel.options.length; i++) {
+      var opt = sel.options[i];
+      if (opt.value && new URL(opt.value).pathname === current) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+  })();
+</script>
 {{- end }}
 
 {{- $paginator := .Paginate $pages }}

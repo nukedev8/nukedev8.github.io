@@ -77,12 +77,14 @@ jobs:
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
         run: python scripts/sync_notion.py
 
-      # Step 5: Install Hugo (extended version supports SCSS/SASS themes)
+      # Step 5: Install Hugo 0.146.0 directly from GitHub releases
+      # (peaceiris/actions-hugo@v3 doesn't support 0.146.0+ yet)
       - name: Install Hugo
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: "0.146.0"   # Minimum version required by PaperMod
-          extended: true             # Extended version needed by some themes
+        run: |
+          HUGO_VERSION="0.146.0"
+          wget -q "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
+          sudo dpkg -i "hugo_extended_${HUGO_VERSION}_linux-amd64.deb"
+          hugo version
 
       # Step 6: Configure GitHub Pages
       # This sets the correct base URL so internal links work on Pages

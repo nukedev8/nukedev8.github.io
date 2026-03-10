@@ -6,10 +6,10 @@
 # ---------------------------------------------------------------------------
 
 # Your GitHub Pages URL — update this before pushing
-baseURL = "https://nukedev8.github.io/nukedev/"
+baseURL = "https://nukedev8.github.io/"
 
 # Site title shown in browser tab + header
-title = "nukedev"
+title = "Nukedev"
 
 languageCode = "en-us"
 
@@ -195,7 +195,7 @@ buildExpired     = false
 
   # --- SEO / OpenGraph ---
   [params.label]
-    text = "nukedev"
+    text = "Nukedev"
 
 # ---------------------------------------------------------------------------
 # Search page

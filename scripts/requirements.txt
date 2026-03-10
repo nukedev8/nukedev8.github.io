@@ -1,12 +1,3 @@
-# Python dependencies for the sync script
-# Install with: pip install -r scripts/requirements.txt
-
-# Official Notion Python SDK
 notion-client==2.2.1
-
-# Converts arbitrary strings into URL-safe slugs
-# e.g. "Hello World! 🌍" → "hello-world"
 python-slugify==8.0.4
-
-# Used to download images from Notion (uploaded file URLs expire after ~1 hour)
 requests==2.31.0

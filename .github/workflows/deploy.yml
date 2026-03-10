@@ -1,0 +1,125 @@
+# ---------------------------------------------------------------------------
+# .github/workflows/deploy.yml
+#
+# This workflow does three things every time you push to main:
+#   1. Runs sync_notion.py  → generates Markdown files in content/posts/
+#   2. Runs Hugo             → builds the static site into the public/ folder
+#   3. Deploys to GitHub Pages
+#
+# You can also trigger it manually from the Actions tab in your repo.
+# ---------------------------------------------------------------------------
+
+name: Deploy Hugo site to GitHub Pages
+
+on:
+  # Run automatically on every push to the main branch
+  push:
+    branches:
+      - main
+
+  # Allow you to trigger a build manually from the GitHub UI
+  # (Actions tab → select this workflow → "Run workflow")
+  workflow_dispatch:
+
+# ---------------------------------------------------------------------------
+# Permissions
+# GitHub Pages deployment requires read access to contents and write
+# access to pages + id-token.
+# ---------------------------------------------------------------------------
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one deployment at a time.
+# If a new push arrives while a deploy is in progress, cancel the old one.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+# ---------------------------------------------------------------------------
+# Jobs
+# ---------------------------------------------------------------------------
+jobs:
+
+  # -------------------------------------------------------------------------
+  # Job 1: Sync Notion → generate Markdown → Build Hugo site
+  # -------------------------------------------------------------------------
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch the full git history so Hugo's .GitInfo works correctly
+          fetch-depth: 0
+          # Fetch submodules (needed if your theme is a git submodule)
+          submodules: recursive
+
+      # Step 2: Set up Python so we can run our sync script
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Step 3: Install the Python packages listed in requirements.txt
+      - name: Install Python dependencies
+        run: pip install -r scripts/requirements.txt
+
+      # Step 4: Run the Notion sync script
+      # The script reads NOTION_TOKEN and NOTION_DATABASE_ID from the
+      # environment. GitHub automatically makes Secrets available here.
+      - name: Sync posts from Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: python scripts/sync_notion.py
+
+      # Step 5: Install Hugo (extended version supports SCSS/SASS themes)
+      - name: Install Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.124.1"   # Pin a known-good version
+          extended: true             # Extended version needed by some themes
+
+      # Step 6: Configure GitHub Pages
+      # This sets the correct base URL so internal links work on Pages
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      # Step 7: Build the Hugo site
+      # --minify shrinks HTML/CSS/JS for faster page loads
+      # --baseURL overrides hugo.toml with the correct Pages URL
+      - name: Build Hugo site
+        run: |
+          hugo \
+            --minify \
+            --baseURL "${{ steps.pages.outputs.base_url }}/"
+
+      # Step 8: Upload the built site as a Pages artifact
+      # The deploy job (below) will pick this up
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public   # Hugo always outputs to ./public
+
+  # -------------------------------------------------------------------------
+  # Job 2: Deploy the built artifact to GitHub Pages
+  # -------------------------------------------------------------------------
+  deploy:
+    # This job only runs after "build" succeeds
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Required for GitHub Pages deployment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

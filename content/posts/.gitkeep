@@ -1,0 +1,3 @@
+# This file ensures the content/posts/ directory is tracked by Git
+# even before you have any posts.
+# Hugo needs this directory to exist when it builds.

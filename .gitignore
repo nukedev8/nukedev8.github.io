@@ -1,0 +1,27 @@
+# Hugo build output — never commit this
+public/
+resources/_gen/
+
+# Hugo cache
+.hugo_build.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment files — NEVER commit secrets
+.env
+.env.local
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor configs (optional — remove if you want to keep these)
+.idea/
+.vscode/
+*.swp

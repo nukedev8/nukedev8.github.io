@@ -1,0 +1,206 @@
+# hugo.toml — Hugo site configuration
+# Docs: https://gohugo.io/getting-started/configuration/
+
+# ---------------------------------------------------------------------------
+# Site Identity
+# ---------------------------------------------------------------------------
+
+# Your GitHub Pages URL — update this before pushing
+baseURL = "https://nukedev8.github.io/nukedev/"
+
+# Site title shown in browser tab + header
+title = "Hey, I'm Brian 👋"
+
+languageCode = "en-us"
+
+# ---------------------------------------------------------------------------
+# Theme — PaperMod
+# Install: git submodule add https://github.com/adityatelange/hugo-PaperMod themes/PaperMod
+# ---------------------------------------------------------------------------
+theme = "PaperMod"
+
+# ---------------------------------------------------------------------------
+# Build settings
+# ---------------------------------------------------------------------------
+
+# How many posts appear on the home feed / paginated pages
+paginate = 10
+
+# PaperMod needs these enabled for search to work
+enableRobotsTXT = true
+buildDrafts      = false
+buildFuture      = false
+buildExpired     = false
+
+[minify]
+  disableXML = true
+  minifyOutput = true
+
+# ---------------------------------------------------------------------------
+# Markdown
+# ---------------------------------------------------------------------------
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true   # allow raw HTML from Notion exports
+  [markup.highlight]
+    noClasses         = false   # use external CSS classes for syntax highlight
+    lineNos           = true
+    lineNumbersInTable = true
+
+# ---------------------------------------------------------------------------
+# Outputs — needed for PaperMod search
+# ---------------------------------------------------------------------------
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+# ---------------------------------------------------------------------------
+# Taxonomy
+# ---------------------------------------------------------------------------
+
+[taxonomies]
+  tag      = "tags"
+  category = "categories"
+
+# ---------------------------------------------------------------------------
+# Navigation Menu
+# ---------------------------------------------------------------------------
+
+[[menus.main]]
+  name       = "Posts"
+  url        = "/posts/"
+  weight     = 10
+
+[[menus.main]]
+  name       = "Tags"
+  url        = "/tags/"
+  weight     = 20
+
+[[menus.main]]
+  name       = "Search"
+  url        = "/search/"
+  weight     = 30
+
+# ---------------------------------------------------------------------------
+# PaperMod Parameters
+# Docs: https://github.com/adityatelange/hugo-PaperMod/wiki/Features
+# ---------------------------------------------------------------------------
+
+[params]
+
+  # --- Mode ---
+  # "profileMode" gives you a landing page with avatar + bio + social links
+  # (perfect for a dev portfolio), then lists posts below.
+  # Switch to "homeMode = 'recent'" for a straight post-list home page.
+  env = "production"
+
+  # Default theme: "dark" | "light" | "auto"
+  defaultTheme = "auto"
+
+  # Show dark/light toggle button in the header
+  disableThemeToggle = false
+
+  # Date format shown on post cards
+  DateFormat = "January 2, 2006"
+
+  # Show reading time ("5 min read")
+  ShowReadingTime   = true
+
+  # Show word count on post pages
+  ShowWordCount     = false
+
+  # Show a "Share" button at the bottom of posts
+  ShowShareButtons  = false
+
+  # Show post navigation (prev / next) links at the bottom
+  ShowPostNavLinks  = true
+
+  # Show breadcrumbs on post pages
+  ShowBreadCrumbs   = true
+
+  # Show code-copy button on code blocks
+  ShowCodeCopyButtons = true
+
+  # Show table of contents on posts (if the post has headings)
+  ShowToc = true
+
+  # Enable full-text search  ← works via the JSON output + Fuse.js
+  fuseOpts.isCaseSensitive  = false
+  fuseOpts.shouldSort       = true
+  fuseOpts.threshold        = 0.4
+  fuseOpts.minMatchCharLength = 2
+  fuseOpts.keys             = ["title", "permalink", "summary", "content"]
+
+  # --- Profile Mode ---
+  # This turns the home page into a portfolio landing with avatar + bio + links
+
+  [params.profileMode]
+    enabled  = true
+
+    # Main heading on the home page
+    title    = "Hey, I'm Brian 👋"
+
+    # Sub-heading / tagline
+    subtitle = "Full Stack Software Engineer"
+
+    # Path to your avatar — place a square image at static/avatar.jpg
+    imageUrl   = "/avatar.jpg"
+    imageWidth  = 120
+    imageHeight = 120
+    imageTitle  = "Brian"
+
+    # Buttons shown below your bio — link to important pages
+    [[params.profileMode.buttons]]
+      name = "Posts"
+      url  = "/posts/"
+
+    [[params.profileMode.buttons]]
+      name = "Tags"
+      url  = "/tags/"
+
+  # --- Social Icons (shown below avatar in profile mode) ---
+  # Full list of supported names: https://github.com/adityatelange/hugo-PaperMod/wiki/Icons
+
+  [[params.socialIcons]]
+    name = "github"
+    url  = "https://github.com/yourhandle"
+
+  [[params.socialIcons]]
+    name = "linkedin"
+    url  = "https://linkedin.com/in/yourhandle"
+
+  [[params.socialIcons]]
+    name = "twitter"
+    url  = "https://twitter.com/yourhandle"
+
+  [[params.socialIcons]]
+    name = "rss"
+    url  = "/index.xml"
+
+  # --- Cover images on posts ---
+  [params.cover]
+    hidden       = false   # show cover images in post list
+    hiddenInList = false
+    hiddenInSingle = false
+
+  # --- Edit post link (optional — remove if you don't want it) ---
+  # Shows a "Suggest Changes" link at the bottom of each post pointing to Notion
+  # [params.editPost]
+  #   URL = "https://www.notion.so/your-database-id"
+  #   Text = "Edit in Notion"
+  #   appendFilePath = false
+
+  # --- SEO / OpenGraph ---
+  [params.label]
+    text = "Brian"      # text shown in top-left corner (next to home icon)
+
+# ---------------------------------------------------------------------------
+# Search page
+# Create a file at content/search.md with:
+#   ---
+#   title: "Search"
+#   layout: "search"
+#   ---
+# ---------------------------------------------------------------------------

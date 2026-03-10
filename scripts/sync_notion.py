@@ -1,24 +1,16 @@
 """
 sync_notion.py
 ==============
-Pulls published posts from a Notion database and writes them as
-Hugo-compatible Markdown files inside content/posts/.
+Pulls published posts AND projects from Notion databases and writes them
+as Hugo-compatible Markdown files.
 
-v2 — adds image support:
-  • Detects Notion "image" blocks (both uploaded files and external URLs)
-  • Downloads uploaded images locally (Notion's file URLs expire after ~1 hour)
-  • Saves each post as a Hugo Page Bundle so images live next to the post:
-      content/posts/<slug>/index.md
-      content/posts/<slug>/image-0.jpg
-      content/posts/<slug>/image-1.png
-  • References images with relative paths so they work everywhere
-
-Requirements:
-    pip install notion-client python-slugify requests
+Posts  → content/posts/<slug>/index.md
+Projects → content/projects/<slug>/index.md
 
 Environment variables (set these as GitHub Secrets):
-    NOTION_TOKEN       — your Notion integration secret key
-    NOTION_DATABASE_ID — the ID of your "Posts" Notion database
+    NOTION_TOKEN                — your Notion integration secret key
+    NOTION_DATABASE_ID          — ID of your "Posts" database
+    NOTION_PROJECTS_DATABASE_ID — ID of your "Projects" database (optional)
 """
 
 import os
@@ -39,12 +31,12 @@ from slugify import slugify
 
 NOTION_TOKEN = os.environ.get("NOTION_TOKEN")
 NOTION_DATABASE_ID = os.environ.get("NOTION_DATABASE_ID")
+NOTION_PROJECTS_DATABASE_ID = os.environ.get("NOTION_PROJECTS_DATABASE_ID")
 
-# Root directory for all posts (Hugo Page Bundle style)
-# Each post lives at: content/posts/<slug>/index.md
-OUTPUT_DIR = Path("content/posts")
+# Output directories
+POSTS_DIR   = Path("content/posts")
+PROJECTS_DIR = Path("content/projects")
 
-# Timeout (seconds) for image downloads — don't hang forever
 IMAGE_DOWNLOAD_TIMEOUT = 30
 
 
@@ -53,6 +45,11 @@ def validate_config():
     if not NOTION_TOKEN:
         print("ERROR: NOTION_TOKEN environment variable is not set.")
         sys.exit(1)
+    if not NOTION_DATABASE_ID:
+        print("ERROR: NOTION_DATABASE_ID environment variable is not set.")
+        sys.exit(1)
+    if not NOTION_PROJECTS_DATABASE_ID:
+        print("ℹ️  NOTION_PROJECTS_DATABASE_ID not set — skipping projects sync.")
     if not NOTION_DATABASE_ID:
         print("ERROR: NOTION_DATABASE_ID environment variable is not set.")
         sys.exit(1)
@@ -371,22 +368,15 @@ draft       = false
 +++"""
 
 
-def write_post(meta: dict, content: str):
+def write_post(meta: dict, content: str, output_dir: Path = None):
     """
-    Write the post as a Hugo Page Bundle.
-
-    Structure created:
-        content/posts/<slug>/
-            index.md        ← the post Markdown
-            image-0.jpg     ← downloaded images (if any)
-            image-1.png
-            …
-
-    Hugo automatically treats index.md inside a directory as a Page Bundle,
-    making all sibling files available as page resources.
+    Write the page as a Hugo Page Bundle to the given output_dir.
+    Defaults to POSTS_DIR if not specified.
     """
-    # Create the post's own directory (the "bundle")
-    post_dir = OUTPUT_DIR / meta["slug"]
+    if output_dir is None:
+        output_dir = POSTS_DIR
+
+    post_dir = output_dir / meta["slug"]
     post_dir.mkdir(parents=True, exist_ok=True)
 
     filename = post_dir / "index.md"
@@ -402,32 +392,117 @@ def write_post(meta: dict, content: str):
 
 
 # ---------------------------------------------------------------------------
+# Projects — separate Notion database
+# ---------------------------------------------------------------------------
+
+def extract_project_metadata(page: dict) -> dict:
+    """
+    Pull metadata from a Notion Projects database page.
+
+    Expected Notion properties:
+        Name        (title)
+        Slug        (rich text)
+        Published   (checkbox)
+        Description (rich text)
+        Tags        (multi-select)
+        URL         (url)       — live project link
+        GitHub      (url)       — source code link
+    """
+    props = page.get("properties", {})
+
+    name_blocks = props.get("Name", {}).get("title", [])
+    title = get_plain_text(name_blocks) or "Untitled Project"
+
+    slug_blocks = props.get("Slug", {}).get("rich_text", [])
+    slug_raw = get_plain_text(slug_blocks)
+    slug = slug_raw.strip() if slug_raw.strip() else slugify(title)
+
+    desc_blocks = props.get("Description", {}).get("rich_text", [])
+    description = get_plain_text(desc_blocks)
+
+    tag_options = props.get("Tags", {}).get("multi_select", [])
+    tags = [t["name"] for t in tag_options]
+
+    project_url = props.get("URL", {}).get("url") or ""
+    github_url  = props.get("GitHub", {}).get("url") or ""
+
+    return {
+        "title": title,
+        "slug": slug,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "description": description,
+        "tags": tags,
+        "projectURL": project_url,
+        "githubURL": github_url,
+    }
+
+
+def build_project_front_matter(meta: dict) -> str:
+    """Build TOML front matter for a project page."""
+    tags_toml = "[" + ", ".join(f'"{ t}"' for t in meta["tags"]) + "]"
+    return f"""+++
+title       = "{meta['title']}"
+date        = "{meta['date']}"
+slug        = "{meta['slug']}"
+description = "{meta['description']}"
+tags        = {tags_toml}
+projectURL  = "{meta['projectURL']}"
+githubURL   = "{meta['githubURL']}"
+draft       = false
++++"""
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
 def main():
     validate_config()
-
     notion = Client(auth=NOTION_TOKEN)
+
+    # --- Sync Posts ---
+    print("\n📝 Syncing Posts...")
     posts = fetch_published_posts(notion)
-
-    if not posts:
-        print("No published posts found. Nothing to sync.")
-        return
-
-    written = []
+    written_posts = []
     for page in posts:
         meta = extract_post_metadata(page)
-        print(f"\nSyncing: {meta['title']} (slug: {meta['slug']})")
-
-        # Build the post directory path so image downloads can go there
-        post_dir = OUTPUT_DIR / meta["slug"]
-
+        print(f"  Syncing: {meta['title']} (slug: {meta['slug']})")
+        post_dir = POSTS_DIR / meta["slug"]
         content = fetch_page_content(notion, page["id"], post_dir)
-        filepath = write_post(meta, content)
-        written.append(filepath)
+        written_posts.append(write_post(meta, content, POSTS_DIR))
+    print(f"✅ Posts: {len(written_posts)} written.")
 
-    print(f"\n✅ Sync complete. {len(written)} post(s) written to {OUTPUT_DIR}/")
+    # --- Sync Projects (optional) ---
+    if NOTION_PROJECTS_DATABASE_ID:
+        print("\n🚀 Syncing Projects...")
+        projects_response = notion.databases.query(
+            database_id=NOTION_PROJECTS_DATABASE_ID,
+            filter={"property": "Published", "checkbox": {"equals": True}},
+        )
+        project_pages = projects_response.get("results", [])
+        print(f"Found {len(project_pages)} published project(s).")
+
+        PROJECTS_DIR.mkdir(parents=True, exist_ok=True)
+        written_projects = []
+        for page in project_pages:
+            meta = extract_project_metadata(page)
+            print(f"  Syncing: {meta['title']} (slug: {meta['slug']})")
+            project_dir = PROJECTS_DIR / meta["slug"]
+            content = fetch_page_content(notion, page["id"], project_dir)
+
+            # Append live links to the content if provided
+            links = []
+            if meta["projectURL"]:
+                links.append(f"🔗 [Live Project]({meta['projectURL']})")
+            if meta["githubURL"]:
+                links.append(f"🐙 [GitHub]({meta['githubURL']})")
+            if links:
+                content = " · ".join(links) + "\n\n" + content
+
+            written_projects.append(write_post(meta, content, PROJECTS_DIR))
+        print(f"✅ Projects: {len(written_projects)} written.")
+    else:
+        print("\nℹ️  Projects skipped (NOTION_PROJECTS_DATABASE_ID not set).")
 
 
 if __name__ == "__main__":

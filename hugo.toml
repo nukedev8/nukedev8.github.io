@@ -75,14 +75,19 @@ buildExpired     = false
   weight     = 10
 
 [[menus.main]]
+  name       = "Projects"
+  url        = "/projects/"
+  weight     = 20
+
+[[menus.main]]
   name       = "Tags"
   url        = "/tags/"
-  weight     = 20
+  weight     = 30
 
 [[menus.main]]
   name       = "Search"
   url        = "/search/"
-  weight     = 30
+  weight     = 40
 
 # ---------------------------------------------------------------------------
 # PaperMod Parameters
@@ -147,7 +152,7 @@ buildExpired     = false
     subtitle = "Full Stack Software Engineer"
 
     # Path to your avatar — place a square image at static/avatar.jpg
-    imageUrl   = "/avatar.jpg"
+    imageUrl   = "https://github.com/nukedev8.png"
     imageWidth  = 120
     imageHeight = 120
     imageTitle  = ""
@@ -156,6 +161,10 @@ buildExpired     = false
     [[params.profileMode.buttons]]
       name = "Posts"
       url  = "/posts/"
+
+    [[params.profileMode.buttons]]
+      name = "Projects"
+      url  = "/projects/"
 
     [[params.profileMode.buttons]]
       name = "Tags"
